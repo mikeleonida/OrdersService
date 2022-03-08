@@ -2,6 +2,7 @@ package com.appsdeveloperblog.estore.OrdersService.saga;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +39,10 @@ import com.appsdeveloperblog.estore.core.events.ProductReservationCancelledEvent
 import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 import com.appsdeveloperblog.estore.core.model.User;
 import com.appsdeveloperblog.estore.core.query.FetchUserPaymentDetailsQuery;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.security.NoTypePermission;
+import com.thoughtworks.xstream.security.NullPermission;
+import com.thoughtworks.xstream.security.PrimitiveTypePermission;
 
 //public class OrderSaga {
 //	
@@ -63,6 +68,25 @@ public class OrderSaga {
 	private final String PAYMENT_PROCESSING_TIMEOUT_DEADLINE="payment-processing-deadline";
 	
 	private String scheduleId;
+	
+	@Autowired
+	private transient XStream xstream = new XStream();
+	
+	// init (non-static) block
+	{
+//		// clear out existing permissions and set own ones
+//		xstream.addPermission(NoTypePermission.NONE);
+//		// allow some basics
+//		xstream.addPermission(NullPermission.NULL);
+//		xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
+//		xstream.allowTypeHierarchy(Collection.class);
+		
+		XStream.setupDefaultSecurity(xstream);
+		// allow any type from core package
+		xstream.allowTypesByWildcard(new String[] {
+		    "com.appsdeveloperblog.estore.core.**"
+		});
+	}
 	
 	@StartSaga
 	@SagaEventHandler(associationProperty="orderId")
@@ -130,7 +154,7 @@ public class OrderSaga {
         
        scheduleId =  deadlineManager.schedule(Duration.of(120, ChronoUnit.SECONDS),
         		PAYMENT_PROCESSING_TIMEOUT_DEADLINE, productReservedEvent);
-   
+       
         ProcessPaymentCommand proccessPaymentCommand = ProcessPaymentCommand.builder()
         		.orderId(productReservedEvent.getOrderId())
         		.paymentDetails(userPaymentDetails.getPaymentDetails())
