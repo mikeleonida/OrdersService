@@ -39,6 +39,10 @@ import com.appsdeveloperblog.estore.core.events.ProductReservedEvent;
 import com.appsdeveloperblog.estore.core.model.User;
 import com.appsdeveloperblog.estore.core.query.FetchUserPaymentDetailsQuery;
 
+//public class OrderSaga {
+//	
+//}
+
 @Saga
 public class OrderSaga {
 	
